@@ -45,9 +45,6 @@ async fn main() -> Result<()> {
         }
         all_projects.extend(batch);
         start_index += BATCH_SIZE;
-        if true {
-            break;
-        }
     }
 
     fs::write(OUTPUT_FILE, serde_json::to_string(&all_projects)?)?;
