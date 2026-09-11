@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 const MACONDO_BASE_URL: &str = "https://macondo.hackclub.com";
 const BATCH_SIZE: i32 = 100;
 const OUTPUT_FILE: &str = "projects.json";
+const DEBUG: bool = true;
 
 #[allow(dead_code)]
 #[derive(Deserialize, Serialize, Debug)]
@@ -27,6 +28,20 @@ struct MacondoProject {
     owner: ProjectOwner,
     #[serde(rename(deserialize = "streakStatus"))]
     streak_status: String,
+    #[serde(
+        rename(deserialize = "needsChangesShip"),
+        default,
+        deserialize_with = "deserialize_needs_changes"
+    )]
+    needs_changes: bool,
+}
+
+fn deserialize_needs_changes<'de, D>(deserializer: D) -> Result<bool, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value: Option<serde_json::Value> = serde::Deserialize::deserialize(deserializer)?;
+    Ok(value.is_some())
 }
 
 #[tokio::main]
@@ -45,6 +60,9 @@ async fn main() -> Result<()> {
         }
         all_projects.extend(batch);
         start_index += BATCH_SIZE;
+        if DEBUG {
+            break;
+        }
     }
 
     fs::write(OUTPUT_FILE, serde_json::to_string(&all_projects)?)?;
